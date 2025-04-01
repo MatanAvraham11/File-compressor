@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Compressor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%);
+            display: flex;
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-area {
+            background: white;
+            border: 2px dashed #a8d1ff;
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: #4a90e2;
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-area.dragover {
+            border-color: #4a90e2;
+            background: #f0f7ff;
+        }
+
+        .upload-icon {
+            font-size: 3.5rem;
+            color: #4a90e2;
+            margin-bottom: 1.5rem;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .upload-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #4a90e2;
+        }
+
+        .upload-text {
+            color: #5a6a7e;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .history-sidebar {
+            width: 320px;
+            background: white;
+            padding: 1.5rem;
+            border-left: 1px solid #e6f0ff;
+            overflow-y: auto;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .history-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #e6f0ff;
+            font-weight: 600;
+        }
+
+        .history-item {
+            padding: 1.2rem;
+            border: 1px solid #e6f0ff;
+            border-radius: 12px;
+            margin-bottom: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: #f8f9fa;
+            border-color: #a8d1ff;
+            transform: translateX(2px);
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e6f0ff;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a90e2 0%, #67b26f 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 1.5rem;
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .compression-stats {
+            margin-top: 1.5rem;
+            color: #5a6a7e;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .compression-stats strong {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <div class="upload-area" id="dropZone">
+            <div class="upload-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                </svg>
+            </div>
+            <div class="upload-text">גרור קבצים לכאן או לחץ לבחירה</div>
+            <input type="file" class="file-input" id="fileInput">
+        </div>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="compression-stats" id="compressionStats"></div>
+            <button class="download-btn" id="downloadBtn">הורד קובץ דחוס</button>
+        </div>
+    </div>
+
+    <div class="history-sidebar">
+        <div class="history-title">היסטוריית דחיסה</div>
+        <div id="historyList"></div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const resultContainer = document.getElementById('resultContainer');
+        const compressionStats = document.getElementById('compressionStats');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const historyList = document.getElementById('historyList');
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show progress
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            resultContainer.style.display = 'none';
+
+            fetch('/compress', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    progressFill.style.width = '100%';
+                    showResult(data);
+                    updateHistory();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        }
+
+        function showResult(data) {
+            resultContainer.style.display = 'block';
+            compressionStats.innerHTML = `
+                <strong>גודל מקורי:</strong> ${formatSize(data.original_size)}<br>
+                <strong>גודל דחוס:</strong> ${formatSize(data.compressed_size)}<br>
+                <strong>אחוז דחיסה:</strong> ${data.compression_ratio}%
+            `;
+
+            downloadBtn.onclick = () => {
+                window.location.href = `/download/${data.compressed_filename}`;
+            };
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function updateHistory() {
+            fetch('/history')
+                .then(response => response.json())
+                .then(history => {
+                    historyList.innerHTML = history.map(item => `
+                        <div class="history-item">
+                            <div style="font-weight: 500;">${item.original_name}</div>
+                            <div style="font-size: 0.9em; color: #5a6a7e; margin-top: 0.5rem;">
+                                ${formatSize(item.original_size)} → ${formatSize(item.compressed_size)}
+                                <br>
+                                <span style="color: #4a90e2;">${item.compression_ratio}% דחיסה</span>
+                            </div>
+                            <button class="download-btn" style="margin-top: 0.8rem; font-size: 0.9em; padding: 0.6rem 1.2rem;"
+                                    onclick="window.location.href='/download/${item.compressed_name}'">
+                                הורד
+                            </button>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        // Initial history load
+        updateHistory();
+    </script>
+</body>
+</html> 
